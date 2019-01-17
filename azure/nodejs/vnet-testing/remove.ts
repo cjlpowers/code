@@ -1,13 +1,19 @@
-import * as MsRestAzure from 'ms-rest-azure';
-import * as AzureArmResource from 'azure-arm-resource';
-import * as AzureArmNetwork from 'azure-arm-network';
-import * as minimist from 'minimist';
+import * as MsRestAzure from 'ms-rest-azure'
+import * as AzureArmResource from 'azure-arm-resource'
+import * as AzureArmNetwork from 'azure-arm-network'
+import * as yargs from 'yargs'
 import {config} from './config'
 
-let rawArgs =  minimist(process.argv.slice(2));
+const argv = yargs
+    .version("1.0.0")
+    .option("resource-group",{
+        demand: true,
+        description: "The Azure resource group name",
+    })
+    .argv
 
 const args ={
-  resourceGroup: <string>rawArgs["resource-group"]
+  resourceGroup: <string>argv.resourceGroup
 }
 
 async function main() {

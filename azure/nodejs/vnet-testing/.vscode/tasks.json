@@ -5,14 +5,11 @@
     "tasks": [
         {
             "type": "typescript",
-            "tsconfig": "azure/nodejs/vnet-testing/tsconfig.json",
+            "tsconfig": "tsconfig.json",
+            "option": "watch",
             "problemMatcher": [
-                "$tsc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+                "$tsc-watch"
+            ]
         }
     ]
 }
