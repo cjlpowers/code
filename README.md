@@ -1,2 +1,2 @@
-# azure
-A repository for Azure development
+# code
+A respository for personal development work and learning.
