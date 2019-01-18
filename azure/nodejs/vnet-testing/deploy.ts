@@ -20,7 +20,7 @@ const argv = yargs
     })
     .argv
 
-const args ={
+const args = {
   resourceGroup: <string>argv.resourceGroup,
   location: <string>argv.location,
   vnetName: <string>argv.vnetName,

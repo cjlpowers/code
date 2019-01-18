@@ -12,7 +12,7 @@ const argv = yargs
     })
     .argv
 
-const args ={
+const args = {
   resourceGroup: <string>argv.resourceGroup
 }
 
