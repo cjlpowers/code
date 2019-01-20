@@ -1,0 +1,10 @@
+FROM jjanzic/docker-python3-opencv
+#FROM spmallick/opencv-docker:opencv-3.4.1
+
+WORKDIR /app
+
+RUN pip install imutils
+
+COPY . ./
+
+CMD ["python", "app.py"]
