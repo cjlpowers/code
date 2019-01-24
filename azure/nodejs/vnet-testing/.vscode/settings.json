@@ -1,11 +1,9 @@
 {
     "files.exclude": {
-        "**/*.js": {"when": "$(basename).ts"},
-        "**/*.map": true,
         "**/node_modules": true
     },
     "files.watcherExclude": {
-        "**/.git": true,
+        "**/dist": true,
         "**/node_modules/*/**": true
       }
 }

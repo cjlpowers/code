@@ -1,7 +1,14 @@
 {
     "compilerOptions": {
-        "target": "es6",
+        "target": "es2016",
         "module": "commonjs",
-        "sourceMap": true
-    }
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "outDir": "dist",
+    },
+    "include": [
+        "src/**/*"
+    ]
 }
