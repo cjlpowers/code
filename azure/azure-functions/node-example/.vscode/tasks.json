@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "runFunctionsHost",
+      "type": "shell",
+      "command": "func host start",
+      "isBackground": true,
+      "problemMatcher": "$func-watch",
+      "options": {
+        "env": {
+          "languageWorkers__node__arguments": "--inspect=5858"
+        }
+      },
+      "dependsOn": [
+        "Build",
+        "installExtensions"
+      ]
+    },
+    {
+      "label": "installExtensions",
+      "command": "func extensions install",
+      "type": "shell"
+    },
+    {
+      "label": "Build",
+      "command": "tsc",
+      "type": "shell",
+      "problemMatcher": [
+        "$tsc"
+      ]
+    }
+  ]
+}
