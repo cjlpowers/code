@@ -33,5 +33,6 @@ COPY --from=dependencies /app/prod_node_modules ./node_modules
 
 # copy dist artifacts
 COPY --from=build /app/dist ./
+COPY package.json ./
 
-ENTRYPOINT ["node"]
+ENTRYPOINT ["node","."]

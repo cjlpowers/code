@@ -1,8 +1,8 @@
 {
-  "name": "vnet-testing",
+  "name": "secure-hybrid-network-cli",
   "version": "1.0.0",
   "description": "",
-  "main": "deploy.js",
+  "main": "cli.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

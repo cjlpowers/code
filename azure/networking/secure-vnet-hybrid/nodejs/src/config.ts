@@ -7,6 +7,7 @@ export const config = {
         "appId": "09b3828f-9cb0-4b1f-9316-f56a8ef625ea",
         "displayName": "nodejs-vnet-testing",
         "name": "http://nodejs-vnet-testing",
-        "tenant": "cbac7754-39ce-4bd1-919d-bb2d104e9622"
+        "tenant": "cbac7754-39ce-4bd1-919d-bb2d104e9622",
+        "password": "MyPassword",
     }
 }
