@@ -1,14 +1,10 @@
-import * as MsRestAzure from 'ms-rest-azure';
-import * as AzureArmResource from 'azure-arm-resource';
-import * as AzureArmNetwork from 'azure-arm-network';
-import { config } from './config'
 import { Clients } from './clients'
 
-export interface IDeployVnetModel {
-    resourceGroup: string,
+interface IDeployVnetModel {
+    resourceGroupName: string,
     location: string,
     vnetName: string,
-    addressPrefixes: string[],
+    vnetAddressPrefixes: string[],
 }
 
 export async function DeployVnet(model: IDeployVnetModel) {
@@ -16,18 +12,18 @@ export async function DeployVnet(model: IDeployVnetModel) {
     const networkClient = await Clients.GetNetworkClient()
 
     // create or update the resource group
-    const rg = await resourceClient.resourceGroups.createOrUpdate(model.resourceGroup, {
+    const rg = await resourceClient.resourceGroups.createOrUpdate(model.resourceGroupName, {
         location: model.location,
-        name: model.resourceGroup
+        name: model.resourceGroupName
     })
     console.log(rg)
 
     // create or update the virtual network
-    const vnet = await networkClient.virtualNetworks.createOrUpdate(model.resourceGroup, model.vnetName, {
+    const vnet = await networkClient.virtualNetworks.createOrUpdate(model.resourceGroupName, model.vnetName, {
         name: model.vnetName,
         location: rg.location,
         addressSpace: {
-            addressPrefixes: model.addressPrefixes
+            addressPrefixes: model.vnetAddressPrefixes
         },
         subnets: [
             {
@@ -55,25 +51,23 @@ export async function DeployVnet(model: IDeployVnetModel) {
     console.log(vnet)
 }
 
-export interface IDeployVpnModel {
-    resourceGroup: string,
+interface IDeployVpnModel {
+    resourceGroupName: string,
     location: string,
     vnetName: string,
     vpnGatewayName: string,
 }
 
 export async function DeployVpn(model: IDeployVpnModel) {
-    const credentials = await MsRestAzure.loginWithServicePrincipalSecret(config.servicePrincipal.appId, config.servicePrincipal.password, config.servicePrincipal.tenant)
-    const networkClient = new AzureArmNetwork.NetworkManagementClient(credentials, config.account.id)
+    const networkClient = await Clients.GetNetworkClient()
 
     // get the gateway subnet
-    const vnet = await networkClient.virtualNetworks.get(model.resourceGroup, model.vnetName)
+    const vnet = await networkClient.virtualNetworks.get(model.resourceGroupName, model.vnetName)
     const subnetGateway = vnet.subnets!.filter(x => x.name === "GatewaySubnet")[0]
-    console.log(vnet)
 
     // create a public IP for the VPN gateway
     const vpnGatewayPublicIPName = model.vpnGatewayName + "-ip"
-    const vpnGatewayPublicIP = await networkClient.publicIPAddresses.createOrUpdate(model.resourceGroup, vpnGatewayPublicIPName, {
+    const vpnGatewayPublicIP = await networkClient.publicIPAddresses.createOrUpdate(model.resourceGroupName, vpnGatewayPublicIPName, {
         name: vpnGatewayPublicIPName,
         location: model.location,
         publicIPAllocationMethod: "Dynamic"
@@ -81,34 +75,35 @@ export async function DeployVpn(model: IDeployVpnModel) {
     console.log(vpnGatewayPublicIP)
 
     // create or update the VPN gateway
-    const vpnGateway = await networkClient.virtualNetworkGateways.createOrUpdate(model.resourceGroup, model.vpnGatewayName, {
+    const vpnGateway = await networkClient.virtualNetworkGateways.createOrUpdate(model.resourceGroupName, model.vpnGatewayName, {
         name: model.vpnGatewayName,
         location: model.location,
         gatewayType: "Vpn",
         vpnType: "RouteBased",
         sku: {
-            tier: "Basic",
+            name: "VpnGw1",
+            tier: "VpnGw1",
+            capacity: 0
         },
+        enableBgp: false,
         ipConfigurations: [
             {
                 name: model.vpnGatewayName + "-ipconfig",
-                privateIPAllocationMethod: "Dynamic",
                 publicIPAddress: {
                     id: vpnGatewayPublicIP.id
                 },
                 subnet: {
                     id: subnetGateway.id
-                }
+                },
             }
         ],
     })
     console.log(vpnGateway)
 }
 
-export interface IDeployVpnSiteToSiteConnectionModel {
-    resourceGroup: string,
+interface IDeployVpnSiteToSiteConnectionModel {
+    resourceGroupName: string,
     location: string,
-    vnetName: string,
     vpnGatewayName: string,
     connectionName: string,
     ipsecSharedKey: string,
@@ -117,15 +112,14 @@ export interface IDeployVpnSiteToSiteConnectionModel {
 }
 
 export async function DeployVpnSiteToSiteConnection(model: IDeployVpnSiteToSiteConnectionModel) {
-    const credentials = await MsRestAzure.loginWithServicePrincipalSecret(config.servicePrincipal.appId, config.servicePrincipal.password, config.servicePrincipal.tenant)
-    const networkClient = new AzureArmNetwork.NetworkManagementClient(credentials, config.account.id)
+    const networkClient = await Clients.GetNetworkClient()
 
     // get the vpn gateway
-    const vpnGateway = await networkClient.virtualNetworkGateways.get(model.resourceGroup, model.vpnGatewayName)
+    const vpnGateway = await networkClient.virtualNetworkGateways.get(model.resourceGroupName, model.vpnGatewayName)
 
     // create the local network gateway
     const localNetworkGatewayName = model.connectionName + "-lgw"
-    const localNetworkGateway = await networkClient.localNetworkGateways.createOrUpdate(model.resourceGroup, localNetworkGatewayName, {
+    const localNetworkGateway = await networkClient.localNetworkGateways.createOrUpdate(model.resourceGroupName, localNetworkGatewayName, {
         name: localNetworkGatewayName,
         location: model.location,
         gatewayIpAddress: model.gatewayIpAddress,
@@ -136,7 +130,7 @@ export async function DeployVpnSiteToSiteConnection(model: IDeployVpnSiteToSiteC
     console.log(localNetworkGateway)
 
     // crwate the vpn connection
-    const vpnConnection = await networkClient.virtualNetworkGatewayConnections.createOrUpdate(model.resourceGroup, model.connectionName, {
+    const vpnConnection = await networkClient.virtualNetworkGatewayConnections.createOrUpdate(model.resourceGroupName, model.connectionName, {
         name: model.connectionName,
         location: model.location,
         connectionType: "IPsec",
@@ -148,33 +142,43 @@ export async function DeployVpnSiteToSiteConnection(model: IDeployVpnSiteToSiteC
     console.log(vpnConnection)
 }
 
-export interface IDeployVpnPointToSiteConnectionModel {
-    resourceGroup: string,
+interface IDeployVpnPointToSiteConnectionModel {
+    resourceGroupName: string,
     location: string,
-    vnetName: string,
     vpnGatewayName: string,
-    vwanName: string,
+    /**
+     * The base 64 encoded public certificate data
+     * 
+     * See: 
+     * https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-certificates-point-to-site-linux
+     * 
+     * https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-certificates-point-to-site
+     */
     cert: string,
 }
 
-export async function DeployVpnPointToSiteConnection(argv: IDeployVpnPointToSiteConnectionModel) {
-    const credentials = await MsRestAzure.loginWithServicePrincipalSecret(config.servicePrincipal.appId, config.servicePrincipal.password, config.servicePrincipal.tenant)
-    const networkClient = new AzureArmNetwork.NetworkManagementClient(credentials, config.account.id)
+export async function DeployVpnPointToSiteConnection(model: IDeployVpnPointToSiteConnectionModel) {
+    const networkClient = await Clients.GetNetworkClient()
 
     // get the vpn gateway
-    const vpnGateway = await networkClient.virtualNetworkGateways.get(argv.resourceGroup, argv.vpnGatewayName)
-
-    const configName = argv.vwanName + "-config"
-    const p2sVpnServerConfig = await networkClient.p2sVpnServerConfigurations.createOrUpdate(argv.resourceGroup, argv.vwanName, configName, {
-        name: configName,
-        vpnProtocols: [
+    let vpnGateway = await networkClient.virtualNetworkGateways.get(model.resourceGroupName, model.vpnGatewayName)
+    vpnGateway.vpnClientConfiguration = {
+        vpnClientProtocols: [
+            "SSTP",
             "IkeV2"
         ],
-        p2SVpnServerConfigVpnClientRootCertificates: [
+        vpnClientAddressPool: {
+            addressPrefixes: [
+                "172.16.201.0/24"
+            ]
+        },
+        vpnClientRootCertificates: [
             {
-                name: "Cert",
-                publicCertData: argv.cert
+                name: "P2SRootCert",
+                publicCertData: model.cert
             }
-        ],
-    })
+        ]
+    }
+    vpnGateway = await networkClient.virtualNetworkGateways.createOrUpdate(model.resourceGroupName, model.vpnGatewayName, vpnGateway)
+    console.log(vpnGateway)
 }

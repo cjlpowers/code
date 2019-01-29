@@ -19,15 +19,15 @@ yargs
                     default: "South Central US",
                     demand: true,
                 })
-                .option("vnet-name", {
-                    description: "The Virtual Network name",
-                    default: "vnet",
-                    demand: true,
-                    string: true,
-                })
                 .command("vnet", "Deploys a virtual network",
                     yargs => {
                         return yargs
+                            .option("name", {
+                                description: "The Virtual Network name",
+                                default: "vnet",
+                                demand: true,
+                                string: true,
+                            })
                             .option("address-prefixes", {
                                 description: "The Azure location",
                                 default: "10.0.0.0/16",
@@ -35,16 +35,16 @@ yargs
                             })
                     },
                     async argv => DeployCmds.DeployVnet({
-                        resourceGroup: argv["resource-group"],
+                        resourceGroupName: argv["resource-group"],
                         location: argv.location,
-                        vnetName: argv["vnet-name"],
-                        addressPrefixes: argv["address-prefixes"].split(",")
+                        vnetName: argv.name,
+                        vnetAddressPrefixes: argv["address-prefixes"].split(",")
                     }))
                 .command("vpn", "Deploys a virtual network",
                     yargs => {
                         return yargs
                             .option("vpn-gateway-name", {
-                                description: "The Virtual Network name",
+                                description: "The VPN gateway name",
                                 default: "vpn-vgw",
                                 demand: true,
                                 string: true,
@@ -75,9 +75,8 @@ yargs
                                         })
                                 },
                                 async argv => DeployCmds.DeployVpnSiteToSiteConnection({
-                                    resourceGroup: argv["resource-group"],
+                                    resourceGroupName: argv["resource-group"],
                                     location: argv.location,
-                                    vnetName: argv["vnet-name"],
                                     vpnGatewayName: argv["vpn-gateway-name"],
                                     connectionName: argv["connection-name"],
                                     ipsecSharedKey: argv["ipsec-shared-key"],
@@ -87,11 +86,6 @@ yargs
                             .command("p2s", "Deploys a Point-to-Site connection",
                                 yargs => {
                                     return yargs
-                                        .option("name", {
-                                            description: "The virtual wan name",
-                                            demand: true,
-                                            string: true,
-                                        })
                                         .option("cert", {
                                             description: "The public certificate data in base64 format from the root certificate",
                                             demand: true,
@@ -99,17 +93,21 @@ yargs
                                         })
                                 },
                                 async argv => DeployCmds.DeployVpnPointToSiteConnection({
-                                    resourceGroup: argv["resource-group"],
+                                    resourceGroupName: argv["resource-group"],
                                     location: argv.location,
-                                    vnetName: argv["vnet-name"],
                                     vpnGatewayName: argv["vpn-gateway-name"],
-                                    vwanName: argv.name,
                                     cert: argv.cert,
                                 }))
+                            .option("vnet-name", {
+                                description: "The virtual network name",
+                                default: "vpn-vgw",
+                                demand: true,
+                                string: true,
+                            })
                             .help()
                     },
                     async argv => DeployCmds.DeployVpn({
-                        resourceGroup: argv["resource-group"],
+                        resourceGroupName: argv["resource-group"],
                         location: argv.location,
                         vnetName: argv["vnet-name"],
                         vpnGatewayName: argv["vpn-gateway-name"],
@@ -130,7 +128,7 @@ yargs
                             })
                     },
                     async argv => RemoveCmds.RemoveResourceGroup({
-                        resourceGroup: argv["resource-group-name"]!,
+                        resourceGroupName: argv["resource-group-name"]!,
                     }))
                 .demandCommand()
                 .help()
