@@ -1,7 +1,7 @@
 import * as MsRestAzure from 'ms-rest-azure';
 import * as AzureArmResource from 'azure-arm-resource';
 import * as AzureArmNetwork from 'azure-arm-network';
-import { config } from './config'
+import { config } from '../config'
 
 export class Clients {
 

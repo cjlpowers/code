@@ -1,7 +1,7 @@
 import yargs = require('yargs');
 import { config } from './config'
-import * as DeployCmds from './deploy'
-import * as RemoveCmds from './remove'
+import * as DeployCmds from './lib/deploy'
+import * as RemoveCmds from './lib/remove'
 
 yargs
     .version(config.version)
