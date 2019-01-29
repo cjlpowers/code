@@ -1,13 +1,16 @@
-import yargs = require('yargs');
-import { config } from './config'
-import * as DeployCmds from './lib/deploy'
-import * as RemoveCmds from './lib/remove'
+// tslint:disable:no-shadowed-variable
+// tslint:disable:max-line-length
+import yargs = require("yargs");
+import Api from "../../api/src/index";
+import { config } from "./config";
 
-yargs
-    .version(config.version)
+const api = new Api(config);
+
+const argv = yargs
+    .version("1.0.0")
     .wrap(yargs.terminalWidth())
     .command("deploy", "Creates or updates infrastructure",
-        yargs => {
+        (yargs) => {
             return yargs
                 .option("resource-group", {
                     description: "The Azure resource group name",
@@ -20,7 +23,7 @@ yargs
                     demand: true,
                 })
                 .command("vnet", "Deploys a virtual network",
-                    yargs => {
+                    (yargs) => {
                         return yargs
                             .option("name", {
                                 description: "The Virtual Network name",
@@ -32,16 +35,16 @@ yargs
                                 description: "The Azure location",
                                 default: "10.0.0.0/16",
                                 demand: true,
-                            })
+                            });
                     },
-                    async argv => DeployCmds.DeployVnet({
+                    async (argv) => api.deployVnet({
                         resourceGroupName: argv["resource-group"],
                         location: argv.location,
                         vnetName: argv.name,
-                        vnetAddressPrefixes: argv["address-prefixes"].split(",")
+                        vnetAddressPrefixes: argv["address-prefixes"].split(","),
                     }))
                 .command("vpn", "Deploys a virtual network",
-                    yargs => {
+                    (yargs) => {
                         return yargs
                             .option("vpn-gateway-name", {
                                 description: "The VPN gateway name",
@@ -50,7 +53,7 @@ yargs
                                 string: true,
                             })
                             .command("s2s", "Deploys a Site-to-Site connection",
-                                yargs => {
+                                (yargs) => {
                                     return yargs
                                         .option("connection-name", {
                                             description: "The connection name",
@@ -72,9 +75,9 @@ yargs
                                             default: "192.168.0.0/16",
                                             demand: true,
                                             string: true,
-                                        })
+                                        });
                                 },
-                                async argv => DeployCmds.DeployVpnSiteToSiteConnection({
+                                async (argv) => api.deployVpnSiteToSiteConnection({
                                     resourceGroupName: argv["resource-group"],
                                     location: argv.location,
                                     vpnGatewayName: argv["vpn-gateway-name"],
@@ -84,15 +87,15 @@ yargs
                                     localAddressPrefixes: argv["local-address-prefixes"].split(","),
                                 }))
                             .command("p2s", "Deploys a Point-to-Site connection",
-                                yargs => {
+                                (yargs) => {
                                     return yargs
                                         .option("cert", {
                                             description: "The public certificate data in base64 format from the root certificate",
                                             demand: true,
                                             string: true,
-                                        })
+                                        });
                                 },
-                                async argv => DeployCmds.DeployVpnPointToSiteConnection({
+                                async (argv) => api.deployVpnPointToSiteConnection({
                                     resourceGroupName: argv["resource-group"],
                                     location: argv.location,
                                     vpnGatewayName: argv["vpn-gateway-name"],
@@ -104,35 +107,35 @@ yargs
                                 demand: true,
                                 string: true,
                             })
-                            .help()
+                            .help();
                     },
-                    async argv => DeployCmds.DeployVpn({
+                    async (argv) => api.deployVpn({
                         resourceGroupName: argv["resource-group"],
                         location: argv.location,
                         vnetName: argv["vnet-name"],
                         vpnGatewayName: argv["vpn-gateway-name"],
                     }))
                 .demandCommand()
-                .help()
+                .help();
         })
     .command("remove", "Removes infrastructure",
-        yargs => {
+        (yargs) => {
             return yargs
                 .command("resource-group <resource-group-name>", "Removes a resource group",
-                    yargs => {
+                    (yargs) => {
                         return yargs
                             .positional("resource-group-name", {
                                 type: "string",
                                 description: "The Azure resource group name",
                                 demand: true,
-                            })
+                            });
                     },
-                    async argv => RemoveCmds.RemoveResourceGroup({
+                    async (argv) => api.removeResourceGroup({
                         resourceGroupName: argv["resource-group-name"]!,
                     }))
                 .demandCommand()
-                .help()
+                .help();
         })
     .demandCommand()
     .help()
-    .argv
+    .argv;
