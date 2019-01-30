@@ -1,4 +1,5 @@
-import Api from "hybrid-network-api";
+import * as ApiModule from "hybrid-network-api";
 import { config } from "./config";
 
-export const api = new Api(config);
+export { ApiModule };
+export const azureConnection = new ApiModule.AzureConnection(config);

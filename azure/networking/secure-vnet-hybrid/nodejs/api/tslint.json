@@ -4,6 +4,8 @@
         "max-line-length": {
             "options": [140]
         },
-        "object-literal-sort-keys": false
+        "member-ordering": false,
+        "object-literal-sort-keys": false,
+        "ordered-imports": false
     }
 }

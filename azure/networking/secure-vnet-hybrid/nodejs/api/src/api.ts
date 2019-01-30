@@ -1,15 +1,40 @@
-import * as AzureArmNetwork from "azure-arm-network";
-import * as AzureArmResource from "azure-arm-resource";
-import * as MsRestAzure from "ms-rest-azure";
+
 import * as Models from "./models";
+import { AzureConnection } from "./azureConnection";
 
 export class Api {
-    constructor(private config: Models.IApiConfig) {
+    constructor(private connection: AzureConnection) {
     }
 
-    public async deployVnet(model: Models.IDeployVnetModel) {
-        const resourceClient = await this.getResourceClient();
-        const networkClient = await this.getNetworkClient();
+    public async getResourceGroup(resourceGroupName: string) {
+        const resourceClient = await this.connection.getResourceClient();
+        await resourceClient.resourceGroups.get(resourceGroupName);
+    }
+
+    public async exportResourceGroup(resourceGroupName: string) {
+        const resourceClient = await this.connection.getResourceClient();
+        return resourceClient.resourceGroups.exportTemplate(resourceGroupName, {
+            resources: [
+                "*",
+            ],
+        });
+    }
+
+    public async createResourceGroup(model: Models.ICreateResourceGroup) {
+        const resourceClient = await this.connection.getResourceClient();
+        return resourceClient.resourceGroups.createOrUpdate(model.resourceGroupName, {
+            location: model.location,
+        });
+    }
+
+    public async removeResourceGroup(model: Models.IRemoveResourceGroup) {
+        const resourceClient = await this.connection.getResourceClient();
+        await resourceClient.resourceGroups.deleteMethod(model.resourceGroupName);
+    }
+
+    public async deployVnet(model: Models.IDeployVnet) {
+        const resourceClient = await this.connection.getResourceClient();
+        const networkClient = await this.connection.getNetworkClient();
 
         // create or update the resource group
         const rg = await resourceClient.resourceGroups.createOrUpdate(model.resourceGroupName, {
@@ -51,8 +76,8 @@ export class Api {
         return vnet;
     }
 
-    public async deployVpn(model: Models.IDeployVpnModel) {
-        const networkClient = await this.getNetworkClient();
+    public async deployVpn(model: Models.IDeployVpn) {
+        const networkClient = await this.connection.getNetworkClient();
 
         // get the gateway subnet
         const vnet = await networkClient.virtualNetworks.get(model.resourceGroupName, model.vnetName);
@@ -98,8 +123,8 @@ export class Api {
             });
     }
 
-    public async deployVpnSiteToSiteConnection(model: Models.IDeployVpnSiteToSiteConnectionModel) {
-        const networkClient = await this.getNetworkClient();
+    public async deployVpnSiteToSiteConnection(model: Models.IDeployVpnSiteToSiteConnection) {
+        const networkClient = await this.connection.getNetworkClient();
 
         // get the vpn gateway
         const vpnGateway = await networkClient.virtualNetworkGateways.get(model.resourceGroupName, model.vpnGatewayName);
@@ -123,18 +148,18 @@ export class Api {
             model.resourceGroupName,
             model.connectionName,
             {
-            name: model.connectionName,
-            location: model.location,
-            connectionType: "IPsec",
-            sharedKey: model.ipsecSharedKey,
-            virtualNetworkGateway1: vpnGateway,
-            localNetworkGateway2: localNetworkGateway,
+                name: model.connectionName,
+                location: model.location,
+                connectionType: "IPsec",
+                sharedKey: model.ipsecSharedKey,
+                virtualNetworkGateway1: vpnGateway,
+                localNetworkGateway2: localNetworkGateway,
                 routingWeight: 100,
             });
     }
 
-    public async deployVpnPointToSiteConnection(model: Models.IDeployVpnPointToSiteConnectionModel) {
-        const networkClient = await this.getNetworkClient();
+    public async deployVpnPointToSiteConnection(model: Models.IDeployVpnPointToSiteConnection) {
+        const networkClient = await this.connection.getNetworkClient();
 
         // get the vpn gateway
         let vpnGateway = await networkClient.virtualNetworkGateways.get(model.resourceGroupName, model.vpnGatewayName);
@@ -157,33 +182,4 @@ export class Api {
         };
         vpnGateway = await networkClient.virtualNetworkGateways.createOrUpdate(model.resourceGroupName, model.vpnGatewayName, vpnGateway);
     }
-
-    public async removeResourceGroup(model: Models.IRemoveResourceGroup) {
-        const resourceClient = await this.getResourceClient();
-        await resourceClient.resourceGroups.deleteMethod(model.resourceGroupName);
-    }
-
-    //#region Helpers
-    private async getCredentials() {
-        return await MsRestAzure.loginWithServicePrincipalSecret(
-            this.config.servicePrincipal.appId,
-            this.config.servicePrincipal.password,
-            this.config.servicePrincipal.tenant);
-                }
-
-    private async getResourceClient() {
-        const credentials = await this.getCredentials();
-        return new AzureArmResource.ResourceManagementClient(credentials, this.config.account.id);
-        }
-
-    private async getNetworkClient() {
-        const credentials = await this.getCredentials();
-        return new AzureArmNetwork.NetworkManagementClient(credentials, this.config.account.id);
-    }
-
-    private async deployTemplate(deployment: AzureArmResource.ResourceModels.Deployment) {
-        const resourceClient = await this.getResourceClient();
-        const result = await resourceClient.deployments.createOrUpdate("", "", deployment);
-    }
-    //#endregion
 }

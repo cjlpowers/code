@@ -1,29 +1,18 @@
-export interface IApiConfig {
-    account: {
-        id: string,
-    };
-    servicePrincipal: {
-        appId: string,
-        tenant: string,
-        password: string,
-    };
-}
-
-export interface IDeployVnetModel {
+export interface IDeployVnet {
     resourceGroupName: string;
     location: string;
     vnetName: string;
     vnetAddressPrefixes: string[];
 }
 
-export interface IDeployVpnModel {
+export interface IDeployVpn {
     resourceGroupName: string;
     location: string;
     vnetName: string;
     vpnGatewayName: string;
 }
 
-export interface IDeployVpnSiteToSiteConnectionModel {
+export interface IDeployVpnSiteToSiteConnection {
     resourceGroupName: string;
     location: string;
     vpnGatewayName: string;
@@ -33,7 +22,7 @@ export interface IDeployVpnSiteToSiteConnectionModel {
     localAddressPrefixes: string[];
 }
 
-export interface IDeployVpnPointToSiteConnectionModel {
+export interface IDeployVpnPointToSiteConnection {
     resourceGroupName: string;
     location: string;
     vpnGatewayName: string;
@@ -48,11 +37,11 @@ export interface IDeployVpnPointToSiteConnectionModel {
     cert: string;
 }
 
-export interface IRemoveResourceGroup {
+export interface ICreateResourceGroup {
+    location: string;
     resourceGroupName: string;
 }
 
-export interface IDeploymentTemplate {
-    template: any;
-
+export interface IRemoveResourceGroup {
+    resourceGroupName: string;
 }

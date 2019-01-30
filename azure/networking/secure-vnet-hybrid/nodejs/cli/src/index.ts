@@ -1,10 +1,11 @@
 // tslint:disable:no-shadowed-variable
 // tslint:disable:max-line-length
 import yargs = require("yargs");
-import Api from "../../api/src/index";
+import * as ApiModule from "../../api/src/index";
 import { config } from "./config";
 
-const api = new Api(config);
+const azureConnection = new ApiModule.AzureConnection(config);
+const api = new ApiModule.Api(azureConnection);
 
 const argv = yargs
     .version("1.0.0")
@@ -43,6 +44,33 @@ const argv = yargs
                         vnetName: argv.name,
                         vnetAddressPrefixes: argv["address-prefixes"].split(","),
                     }))
+                .command("vnet-template", "Deploys a virtual network",
+                    (yargs) => {
+                        return yargs
+                            .option("name", {
+                                description: "The Virtual Network name",
+                                default: "vnet",
+                                demand: true,
+                                string: true,
+                            })
+                            .option("address-prefixes", {
+                                description: "The Azure location",
+                                default: "10.0.0.0/16",
+                                demand: true,
+                            });
+                    },
+                    async (argv) => {
+                        const deployment = new ApiModule.VNetDeployment({
+                            deploymentName: argv.name,
+                            resourceGroupName: argv["resource-group"],
+                            location: argv.location,
+                            vnet: {
+                                name: argv.name,
+                                addressPrefixes: argv["address-prefixes"].split(","),
+                            },
+                        });
+                        await deployment.deploy(azureConnection);
+                    })
                 .command("vpn", "Deploys a virtual network",
                     (yargs) => {
                         return yargs
@@ -103,7 +131,7 @@ const argv = yargs
                                 }))
                             .option("vnet-name", {
                                 description: "The virtual network name",
-                                default: "vpn-vgw",
+                                default: "vnet",
                                 demand: true,
                                 string: true,
                             })
@@ -133,6 +161,25 @@ const argv = yargs
                     async (argv) => api.removeResourceGroup({
                         resourceGroupName: argv["resource-group-name"]!,
                     }))
+                .demandCommand()
+                .help();
+        })
+    .command("export", "Exports infrastructure",
+        (yargs) => {
+            return yargs
+                .command("resource-group <resource-group-name>", "Exports a resource group as a template",
+                    (yargs) => {
+                        return yargs
+                            .positional("resource-group-name", {
+                                type: "string",
+                                description: "The Azure resource group name",
+                                demand: true,
+                            });
+                    },
+                    async (argv) => {
+                        const result = await api.exportResourceGroup(argv["resource-group-name"]!);
+                        console.log(JSON.stringify(result, null, 2));
+                    })
                 .demandCommand()
                 .help();
         })

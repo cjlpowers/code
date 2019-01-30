@@ -1,2 +1,8 @@
+import { AzureConnection } from "./azureConnection";
 import { Api } from "./api";
-export default Api;
+import { VNetDeployment } from "./deployments/vnetDeployment";
+
+export { AzureConnection };
+export { Api };
+export { VNetDeployment };
+
