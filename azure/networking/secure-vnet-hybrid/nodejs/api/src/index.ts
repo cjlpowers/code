@@ -1,8 +1,11 @@
 import { AzureConnection } from "./azureConnection";
-import { Api } from "./api";
-import { VNetDeployment } from "./deployments/vnetDeployment";
-
 export { AzureConnection };
+
+import { Api } from "./api";
 export { Api };
+
+import { VNetDeployment } from "./deployments/vnetDeployment";
 export { VNetDeployment };
 
+import { VpnGatewayDeployment } from "./deployments/vpnGatewayDeployment";
+export { VpnGatewayDeployment };

@@ -1,0 +1,93 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetName": {
+            "defaultValue": "vnet",
+            "type": "String"
+        },
+        "virtualNetworkGatewayName": {
+            "defaultValue": "vpn-vgw",
+            "type": "String"
+        },
+        "virtualNetworkGatewayPublicIpName": {
+            "defaultValue": "[concat(parameters('virtualNetworkGatewayName'), '-ip')]",
+            "type": "String"
+        },        
+        "virtualNetworkGatewaySubnetName": {
+            "defaultValue": "GatewaySubnet",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template/providers/Microsoft.Network/publicIPAddresses/vpn-vgw-ip'.",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "name": "[parameters('virtualNetworkGatewayPublicIpName')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "d9347bed-d4a4-4d36-a841-164744749a1a",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template/providers/Microsoft.Network/virtualNetworkGateways/vpn-vgw'.",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "name": "[parameters('virtualNetworkGatewayName')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "resourceGuid": "0f1377cd-9d51-40c4-ae02-09bef14e4d33",
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('virtualNetworkGatewayName'),'-ipconfig')]",
+                        "etag": "W/\"9fa83137-f470-4e13-8ef2-7258982b684d\"",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetworkGatewayPublicIpName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('virtualNetworkGatewaySubnetName'))]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "VpnGw1",
+                    "tier": "VpnGw1",
+                    "capacity": 2
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": false,
+                "activeActive": false,
+                "vpnClientConfiguration": {
+                    "vpnClientProtocols": [
+                        "SSTP",
+                        "IkeV2"
+                    ],
+                    "vpnClientRootCertificates": [],
+                    "vpnClientRevokedCertificates": [],
+                    "vpnClientIpsecPolicies": []
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('virtualNetworkGatewayPublicIpName'))]"
+            ]
+        }
+    ]
+}

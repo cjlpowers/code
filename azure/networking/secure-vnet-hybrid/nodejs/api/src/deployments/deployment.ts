@@ -8,7 +8,46 @@ export interface IDeploymentParameters {
 }
 
 export abstract class Deployment {
-    public abstract async deploy(connection: AzureConnection): Promise<AzureArmResource.ResourceModels.DeploymentExtended>;
-    protected abstract async cancel(connection: AzureConnection): Promise<void>;
-    protected abstract async delete(connection: AzureConnection): Promise<void>;
+    constructor(protected parameters: IDeploymentParameters) {
+    }
+
+    public async deploy(connection: AzureConnection): Promise<AzureArmResource.ResourceModels.DeploymentExtended> {
+        const resourceClient = await connection.getResourceClient();
+
+        // make sure the resource group exists
+        if (await resourceClient.resourceGroups.checkExistence(this.parameters.resourceGroupName) === false) {
+            await resourceClient.resourceGroups.createOrUpdate(this.parameters.resourceGroupName, {
+                name: this.parameters.resourceGroupName,
+                location: this.parameters.location,
+            });
+        }
+
+        return await resourceClient.deployments.createOrUpdate(
+            this.parameters.resourceGroupName,
+            this.parameters.deploymentName,
+            await this.getAzureDeployment());
+    }
+
+    public async cancel(connection: AzureConnection) {
+        const resourceClient = await connection.getResourceClient();
+        return resourceClient.deployments.cancel(this.parameters.resourceGroupName, this.parameters.deploymentName);
+    }
+
+    public async delete(connection: AzureConnection) {
+        const resourceClient = await connection.getResourceClient();
+        return resourceClient.deployments.deleteMethod(
+            this.parameters.resourceGroupName,
+            this.parameters.deploymentName,
+        );
+    }
+
+    public async validate(connection: AzureConnection) {
+        const resourceClient = await connection.getResourceClient();
+        return resourceClient.deployments.validate(
+            this.parameters.resourceGroupName,
+            this.parameters.deploymentName,
+            await this.getAzureDeployment());
+    }
+
+    protected abstract async getAzureDeployment(): Promise<AzureArmResource.ResourceModels.Deployment>;
 }

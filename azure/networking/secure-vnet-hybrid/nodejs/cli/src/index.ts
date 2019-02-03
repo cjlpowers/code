@@ -38,36 +38,15 @@ const argv = yargs
                                 demand: true,
                             });
                     },
-                    async (argv) => api.deployVnet({
-                        resourceGroupName: argv["resource-group"],
-                        location: argv.location,
-                        vnetName: argv.name,
-                        vnetAddressPrefixes: argv["address-prefixes"].split(","),
-                    }))
-                .command("vnet-template", "Deploys a virtual network",
-                    (yargs) => {
-                        return yargs
-                            .option("name", {
-                                description: "The Virtual Network name",
-                                default: "vnet",
-                                demand: true,
-                                string: true,
-                            })
-                            .option("address-prefixes", {
-                                description: "The Azure location",
-                                default: "10.0.0.0/16",
-                                demand: true,
-                            });
-                    },
                     async (argv) => {
                         const deployment = new ApiModule.VNetDeployment({
                             deploymentName: argv.name,
                             resourceGroupName: argv["resource-group"],
                             location: argv.location,
-                            vnet: {
-                                name: argv.name,
-                                addressPrefixes: argv["address-prefixes"].split(","),
-                            },
+                        },
+                        {
+                            vnetName: argv.name,
+                            vnetAddressPrefixes: argv["address-prefixes"].split(","),
                         });
                         await deployment.deploy(azureConnection);
                     })
@@ -143,6 +122,37 @@ const argv = yargs
                         vnetName: argv["vnet-name"],
                         vpnGatewayName: argv["vpn-gateway-name"],
                     }))
+                .command("vpn-template", "Deploys a virtual network",
+                    (yargs) => {
+                        return yargs
+                            .option("vpn-gateway-name", {
+                                description: "The VPN gateway name",
+                                default: "vpn-vgw",
+                                demand: true,
+                                string: true,
+                            })
+                            .option("vnet-name", {
+                                description: "The virtual network name",
+                                default: "vnet",
+                                demand: true,
+                                string: true,
+                            })
+                            .help();
+                    },
+                    async (argv) => {
+                        const deployment = new ApiModule.VpnGatewayDeployment({
+                            deploymentName: argv["vpn-gateway-name"],
+                            resourceGroupName: argv["resource-group"],
+                            location: argv.location,
+                            vnet: {
+                                name: argv["vnet-name"],
+                            },
+                            virtualNetworkGateway: {
+                                name: argv["vpn-gateway-name"],
+                            },
+                        });
+                        await deployment.deploy(azureConnection);
+                    })
                 .demandCommand()
                 .help();
         })
