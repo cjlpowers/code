@@ -1,6 +1,6 @@
 import * as AzureArmResource from "azure-arm-resource";
 import { Deployment, IDeploymentParameters } from "./deployment";
-import * as template from "../templates/vpnGateway.json";
+import * as template from "../templates/vpnGateway/azuredeploy.json";
 
 interface IVpnGatewayDeploymentPrameters extends IDeploymentParameters {
     vnet: {

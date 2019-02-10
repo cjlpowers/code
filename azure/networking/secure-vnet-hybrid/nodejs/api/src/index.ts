@@ -10,7 +10,7 @@ export { TemplateDeployment };
 import * as NvaLinuxFirewall from "./templates/nvaLinuxFirewall.json";
 export { NvaLinuxFirewall };
 
-import * as VmLinuxTemplate from "./templates/vmLinux.json";
+import * as VmLinuxTemplate from "./templates/vmLinux/azuredeploy.json";
 export { VmLinuxTemplate };
 
 import { DmzVNetDeployment } from "./deployments/dmzVnetDeployment";
