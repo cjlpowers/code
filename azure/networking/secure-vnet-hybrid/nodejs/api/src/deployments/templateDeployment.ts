@@ -41,13 +41,13 @@ export class TemplateDeployment<T extends ITemplate> extends Deployment {
         super(deploymentParameters);
     }
 
-    protected async getAzureTemplate(): Promise<any> {
+    protected async getAzureTemplate(): Promise<ITemplate> {
         return this.template;
     }
 
     protected async getAzureTemplateParameters(): Promise<any> {
         const result: any = {};
-        Object.keys(this.templateParameters).forEach((key) => result[key] = { value: (this.templateParameters as any).key });
+        Object.keys(this.templateParameters).forEach((key) => result[key] = { value: (this.templateParameters as any)[key] });
         return result;
     }
 

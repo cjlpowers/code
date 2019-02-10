@@ -4,19 +4,19 @@
     "parameters": {
         "vnetName": {
             "defaultValue": "vnet",
-            "type": "String"
+            "type": "string"
         },
         "virtualNetworkGatewayName": {
             "defaultValue": "vpn-vgw",
-            "type": "String"
+            "type": "string"
         },
         "virtualNetworkGatewayPublicIpName": {
             "defaultValue": "[concat(parameters('virtualNetworkGatewayName'), '-ip')]",
-            "type": "String"
+            "type": "string"
         },        
         "virtualNetworkGatewaySubnetName": {
             "defaultValue": "GatewaySubnet",
-            "type": "String"
+            "type": "string"
         }
     },
     "variables": {},
