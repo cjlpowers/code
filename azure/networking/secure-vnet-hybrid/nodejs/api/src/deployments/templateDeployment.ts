@@ -12,6 +12,8 @@ export interface ITemplate {
 
 interface ITemplateParameter {
     type: string;
+    minValue: number;
+    maxValue: number;
 }
 
 interface ITemplateParameterWithoutDefault extends ITemplateParameter {

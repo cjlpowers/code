@@ -16,6 +16,9 @@ export { VmLinuxTemplate };
 import { DmzVNetDeployment } from "./deployments/dmzVnetDeployment";
 export { DmzVNetDeployment };
 
+import { CustomerVNetDeployment } from "./deployments/customerVnetDeployment";
+export { CustomerVNetDeployment };
+
 import { VNetDeployment } from "./deployments/vnetDeployment";
 export { VNetDeployment };
 

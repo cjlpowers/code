@@ -105,6 +105,53 @@ const argv = yargs
                         });
                         await deployment.deploy(azureConnection);
                     })
+                .command("customer-vnet", "Deploys a Customer Virtual Network",
+                    (yargs) => {
+                        return yargs
+                            .option("vnet-name", {
+                                description: "The Virtual Network name",
+                                default: "vnet",
+                                demand: true,
+                                string: true,
+                            })
+                            .option("vnet-address-prefix-2nd-octet", {
+                                description: "The second octet of the vnet address prefix",
+                                default: 1,
+                                demand: true,
+                                string: true,
+                            })
+                            .option("vnet-address-prefix-3rd-octet", {
+                                description: "The third octet of the vnet address prefix",
+                                default: 1,
+                                demand: true,
+                                string: true,
+                            })
+                            .option("firewall-username", {
+                                description: "The firewall admin username",
+                                demand: true,
+                                string: true,
+                            })
+                            .option("firewall-password", {
+                                description: "The firewall admin password",
+                                demand: true,
+                                string: true,
+                            });
+                    },
+                    async (argv) => {
+                        const deployment = new ApiModule.CustomerVNetDeployment({
+                            deploymentName: argv["deployment-name"],
+                            resourceGroupName: argv["resource-group"],
+                            location: argv.location,
+                        },
+                        {
+                            vnetName: argv["vnet-name"],
+                            vnetAddressPrefixSecondOctet: argv["vnet-address-prefix-2nd-octet"],
+                            vnetAddressPrefixThirdOctet: argv["vnet-address-prefix-3rd-octet"],
+                            firewallAdminUsername: argv["firewall-username"],
+                            firewallAdminPassword: argv["firewall-password"],
+                        });
+                        await deployment.deploy(azureConnection);
+                    })
                 .command("vnet", "Deploys a virtual network",
                     (yargs) => {
                         return yargs

@@ -14,6 +14,9 @@ export abstract class Deployment {
     public async deploy(connection: AzureConnection): Promise<AzureArmResource.ResourceModels.DeploymentExtended> {
         const resourceClient = await connection.getResourceClient();
 
+        // get the deployment
+        const azureDeployment = await this.getAzureDeployment();
+
         // make sure the resource group exists
         if (await resourceClient.resourceGroups.checkExistence(this.parameters.resourceGroupName) === false) {
             await resourceClient.resourceGroups.createOrUpdate(this.parameters.resourceGroupName, {
@@ -22,10 +25,21 @@ export abstract class Deployment {
             });
         }
 
+        // validate the deployment
+        const validationResult = await resourceClient.deployments.validate(
+            this.parameters.resourceGroupName,
+            this.parameters.deploymentName,
+            azureDeployment);
+
+        if (validationResult.error) {
+            throw validationResult.error;
+        }
+
+        // create the deployment
         return await resourceClient.deployments.createOrUpdate(
             this.parameters.resourceGroupName,
             this.parameters.deploymentName,
-            await this.getAzureDeployment());
+            azureDeployment);
     }
 
     public async cancel(connection: AzureConnection) {
