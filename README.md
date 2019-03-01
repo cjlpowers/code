@@ -1,2 +1,2 @@
 # code
-A respository for personal development work and learning.
+A repository for general development and prototyping.
