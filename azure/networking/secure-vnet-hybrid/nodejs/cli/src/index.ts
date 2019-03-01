@@ -135,6 +135,26 @@ const argv = yargs
                                 description: "The firewall admin password",
                                 demand: true,
                                 string: true,
+                            })
+                            .option("vce-username", {
+                                description: "The VCE admin username",
+                                demand: true,
+                                string: true,
+                            })
+                            .option("vce-password", {
+                                description: "The VCE admin password",
+                                demand: true,
+                                string: true,
+                            })
+                            .option("sensor-username", {
+                                description: "The sensor admin username",
+                                demand: true,
+                                string: true,
+                            })
+                            .option("sensor-password", {
+                                description: "The sensor admin password",
+                                demand: true,
+                                string: true,
                             });
                     },
                     async (argv) => {
@@ -149,6 +169,10 @@ const argv = yargs
                             vnetAddressPrefixThirdOctet: argv["vnet-address-prefix-3rd-octet"],
                             firewallAdminUsername: argv["firewall-username"],
                             firewallAdminPassword: argv["firewall-password"],
+                            vceAdminUsername: argv["vce-username"],
+                            vceAdminPassword: argv["vce-password"],
+                            sensorAdminUsername: argv["sensor-username"],
+                            sensorAdminPassword: argv["sensor-password"],
                         });
                         await deployment.deploy(azureConnection);
                     })
@@ -230,13 +254,11 @@ const argv = yargs
                             })
                             .option("vnet-name", {
                                 description: "The virtual network name",
-                                default: "vnet",
                                 demand: true,
                                 string: true,
                             })
                             .option("subnet-name", {
                                 description: "The subnet name",
-                                default: "snet-mgmt",
                                 demand: true,
                                 string: true,
                             })

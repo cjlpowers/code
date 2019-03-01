@@ -8,6 +8,6 @@ export const config = {
         displayName: "nodejs-vnet-testing",
         name: "http://nodejs-vnet-testing",
         tenant: "cbac7754-39ce-4bd1-919d-bb2d104e9622",
-        password: "MyPassword",
+        password: "<Password Here>",
     },
 };

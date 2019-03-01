@@ -13,12 +13,10 @@
             "type": "string"
         },
         "virtualNetworkName": {
-            "type": "string",
-            "defaultValue": "vnet"
+            "type": "string"
         },
         "subnetName": {
-            "type": "string",
-            "defaultValue": "snet-mgmt"
+            "type": "string"
         },
         "osDiskType": {
             "type": "string",
