@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: bamboo-agent
+  name: bamboo-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: bamboo-agent
+  template:
+    metadata:
+      labels:
+        k8s-app: bamboo-agent
+    spec:
+      volumes:
+      - name: docker-sock-volume
+        hostPath:
+          path: /var/run/docker.sock
+          type: File
+      - name: agent-data
+        emptyDir: {}
+      containers:
+      - name: bamboo
+        image: cpowers/bamboo-agent:latest
+        args: ["http://bamboo.default.svc.cluster.local"]
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: docker-sock-volume
+        - mountPath: /home/bamboo/bamboo-agent-home
+          name: agent-data

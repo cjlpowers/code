@@ -1,0 +1,769 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworks_vnet_name": {
+            "defaultValue": "vnet",
+            "type": "String"
+        },
+        "routeTables_rt_dmz_in_name": {
+            "defaultValue": "rt-dmz-in",
+            "type": "String"
+        },
+        "routeTables_rt_gateway_name": {
+            "defaultValue": "rt-gateway",
+            "type": "String"
+        },
+        "routeTables_rt_private_name": {
+            "defaultValue": "rt-private",
+            "type": "String"
+        },
+        "loadBalancers_lb_dmz_in_name": {
+            "defaultValue": "lb-dmz-in",
+            "type": "String"
+        },
+        "virtualMachines_vm_linux_name": {
+            "defaultValue": "vm-linux",
+            "type": "String"
+        },
+        "virtualMachines_nva_linux_name": {
+            "defaultValue": "nva-linux",
+            "type": "String"
+        },
+        "publicIPAddresses_vpn_vgw_ip_name": {
+            "defaultValue": "vpn-vgw-ip",
+            "type": "String"
+        },
+        "networkInterfaces_vm_linux_nic_name": {
+            "defaultValue": "vm-linux-nic",
+            "type": "String"
+        },
+        "virtualNetworkGateways_vpn_vgw_name": {
+            "defaultValue": "vpn-vgw",
+            "type": "String"
+        },
+        "networkInterfaces_nva_linux_nic_mgmt_name": {
+            "defaultValue": "nva-linux-nic-mgmt",
+            "type": "String"
+        },
+        "routes_route1_name": {
+            "defaultValue": "route1",
+            "type": "String"
+        },
+        "networkInterfaces_nva_linux_nic_dmz_in_name": {
+            "defaultValue": "nva-linux-nic-dmz-in",
+            "type": "String"
+        },
+        "subnets_snet_mgmt_name": {
+            "defaultValue": "snet-mgmt",
+            "type": "String"
+        },
+        "networkInterfaces_nva_linux_nic_dmz_out_name": {
+            "defaultValue": "nva-linux-nic-dmz-out",
+            "type": "String"
+        },
+        "subnets_snet_dmz_in_name": {
+            "defaultValue": "snet-dmz-in",
+            "type": "String"
+        },
+        "routes_Default_NVA_name": {
+            "defaultValue": "Default-NVA",
+            "type": "String"
+        },
+        "subnets_snet_dmz_out_name": {
+            "defaultValue": "snet-dmz-out",
+            "type": "String"
+        },
+        "subnets_snet_private_name": {
+            "defaultValue": "snet-private",
+            "type": "String"
+        },
+        "subnets_GatewaySubnet_name": {
+            "defaultValue": "GatewaySubnet",
+            "type": "String"
+        },
+        "virtualMachines_nva_linux_id": {
+            "defaultValue": "/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Compute/disks/nva-linux_OsDisk_1_43f5dc7800be4ed4b5394586e09c420f",
+            "type": "String"
+        },
+        "virtualMachines_vm_linux_id": {
+            "defaultValue": "/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Compute/disks/vm-linux_OsDisk_1_c0ec8de4ac0f402db707cc498f742ec3",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Compute/virtualMachines/nva-linux'.",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('virtualMachines_nva_linux_name')]",
+            "apiVersion": "2018-06-01",
+            "location": "southcentralus",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B1s"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "18.04-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('virtualMachines_nva_linux_name'),'_OsDisk_1_43f5dc7800be4ed4b5394586e09c420f')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS",
+                            "id": "[parameters('virtualMachines_nva_linux_id')]"
+                        },
+                        "diskSizeGB": 30
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_nva_linux_name')]",
+                    "adminUsername": "cpowers",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false,
+                        "provisionVMAgent": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_nva_linux_nic_dmz_in_name'))]",
+                            "properties": {
+                                "primary": true
+                            }
+                        },
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_nva_linux_nic_dmz_out_name'))]",
+                            "properties": {
+                                "primary": false
+                            }
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_nva_linux_nic_dmz_in_name'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_nva_linux_nic_dmz_out_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Compute/virtualMachines/vm-linux'.",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('virtualMachines_vm_linux_name')]",
+            "apiVersion": "2018-06-01",
+            "location": "southcentralus",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B1s"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "18.04-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat(parameters('virtualMachines_vm_linux_name'),'_OsDisk_1_c0ec8de4ac0f402db707cc498f742ec3')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS",
+                            "id": "[parameters('virtualMachines_vm_linux_id')]"
+                        },
+                        "diskSizeGB": 30
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachines_vm_linux_name')]",
+                    "adminUsername": "cpowers",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false,
+                        "provisionVMAgent": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_vm_linux_nic_name'))]",
+                            "properties": {
+                                "primary": true
+                            }
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_vm_linux_nic_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/loadBalancers/lb-dmz-in'.",
+            "type": "Microsoft.Network/loadBalancers",
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "name": "[parameters('loadBalancers_lb_dmz_in_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "72782ae0-ed98-474f-b101-6a85697ee4b9",
+                "frontendIPConfigurations": [
+                    {
+                        "name": "LoadBalancerFrontEnd",
+                        "etag": "W/\"bf59dc38-6244-4842-8fd5-9f0a2232380e\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "privateIPAddress": "10.0.0.4",
+                            "privateIPAllocationMethod": "Static",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_dmz_in_name'))]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [],
+                "loadBalancingRules": [],
+                "probes": [],
+                "inboundNatRules": [],
+                "inboundNatPools": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_dmz_in_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/networkInterfaces/nva-linux-nic-dmz-in'.",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('networkInterfaces_nva_linux_nic_dmz_in_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "f6b3ad68-5f7d-4436-8d89-1086559e4b01",
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('networkInterfaces_nva_linux_nic_dmz_in_name'),'-ipconfig')]",
+                        "etag": "W/\"e3045b2d-ec6b-4a57-8162-bac9b2d66361\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "privateIPAddress": "10.0.0.5",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_dmz_in_name'))]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": [],
+                    "appliedDnsServers": [],
+                    "internalDomainNameSuffix": "i5c1op5xnomupanmkf3rovkfaa.jx.internal.cloudapp.net"
+                },
+                "macAddress": "00-0D-3A-72-1B-D7",
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "primary": true,
+                "tapConfigurations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_dmz_in_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/networkInterfaces/nva-linux-nic-dmz-out'.",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('networkInterfaces_nva_linux_nic_dmz_out_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "65b12af9-5c38-4fd9-bf0d-aa322308be5e",
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('networkInterfaces_nva_linux_nic_dmz_out_name'),'-ipconfig')]",
+                        "etag": "W/\"b8b00d33-d08e-4846-95b8-29f076821c83\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "privateIPAddress": "10.0.0.36",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_dmz_out_name'))]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": [],
+                    "appliedDnsServers": [],
+                    "internalDomainNameSuffix": "i5c1op5xnomupanmkf3rovkfaa.jx.internal.cloudapp.net"
+                },
+                "macAddress": "00-0D-3A-72-1F-8F",
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "primary": false,
+                "tapConfigurations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_dmz_out_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/networkInterfaces/nva-linux-nic-mgmt'.",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('networkInterfaces_nva_linux_nic_mgmt_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "8c9fd5c3-f013-4ca1-8405-bfd722f2ed1c",
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('networkInterfaces_nva_linux_nic_mgmt_name'),'-ipconfig')]",
+                        "etag": "W/\"11a2857a-2612-4e23-96ed-b6c71bad5825\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "privateIPAddress": "10.0.0.132",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_mgmt_name'))]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": [],
+                    "appliedDnsServers": [],
+                    "internalDomainNameSuffix": "i5c1op5xnomupanmkf3rovkfaa.jx.internal.cloudapp.net"
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "tapConfigurations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_mgmt_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/networkInterfaces/vm-linux-nic'.",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[parameters('networkInterfaces_vm_linux_nic_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "0a514d8c-11f9-4131-8f42-89a119fb0807",
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('networkInterfaces_vm_linux_nic_name'),'-ipconfig')]",
+                        "etag": "W/\"420f5c5b-d613-469e-8534-d7fe0a299396\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "privateIPAddress": "10.0.1.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_private_name'))]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": [],
+                    "appliedDnsServers": [],
+                    "internalDomainNameSuffix": "i5c1op5xnomupanmkf3rovkfaa.jx.internal.cloudapp.net"
+                },
+                "macAddress": "00-0D-3A-74-7D-CF",
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "primary": true,
+                "tapConfigurations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_snet_private_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/publicIPAddresses/vpn-vgw-ip'.",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "name": "[parameters('publicIPAddresses_vpn_vgw_ip_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "17b7d508-c44e-45df-89a7-30534fb857c5",
+                "ipAddress": "104.214.25.197",
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/routeTables/rt-dmz-in'.",
+            "type": "Microsoft.Network/routeTables",
+            "name": "[parameters('routeTables_rt_dmz_in_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "disableBgpRoutePropagation": false,
+                "routes": []
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/routeTables/rt-gateway'.",
+            "type": "Microsoft.Network/routeTables",
+            "name": "[parameters('routeTables_rt_gateway_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "disableBgpRoutePropagation": false,
+                "routes": [
+                    {
+                        "name": "route1",
+                        "etag": "W/\"0a6ce563-a1a5-47aa-9648-86cb7e510ed5\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "addressPrefix": "10.0.1.0/24",
+                            "nextHopType": "VirtualNetworkGateway"
+                        }
+                    }
+                ]
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/routeTables/rt-private'.",
+            "type": "Microsoft.Network/routeTables",
+            "name": "[parameters('routeTables_rt_private_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "disableBgpRoutePropagation": false,
+                "routes": [
+                    {
+                        "name": "Default-NVA",
+                        "etag": "W/\"d9b27b8d-be0a-450b-a49f-d8e8d5d94076\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "10.0.0.5"
+                        }
+                    }
+                ]
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/virtualNetworkGateways/vpn-vgw'.",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "name": "[parameters('virtualNetworkGateways_vpn_vgw_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "resourceGuid": "ab5b95ef-a330-4fef-8e2f-43d5623ad773",
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('virtualNetworkGateways_vpn_vgw_name'),'-ipconfig')]",
+                        "etag": "W/\"4d7510f3-9b3d-44e2-9b19-3350db0f106d\"",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_vpn_vgw_ip_name'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_GatewaySubnet_name'))]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "VpnGw1",
+                    "tier": "VpnGw1",
+                    "capacity": 2
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": false,
+                "activeActive": false,
+                "vpnClientConfiguration": {
+                    "vpnClientAddressPool": {
+                        "addressPrefixes": [
+                            "172.16.201.0/24"
+                        ]
+                    },
+                    "vpnClientProtocols": [
+                        "SSTP"
+                    ],
+                    "vpnClientRootCertificates": [
+                        {
+                            "name": "P2SRootCert",
+                            "etag": "W/\"4d7510f3-9b3d-44e2-9b19-3350db0f106d\"",
+                            "properties": {
+                                "publicCertData": "MIIC5zCCAc+gAwIBAgIQTRyc3da8PqJIjCEx/d6U5jANBgkqhkiG9w0BAQsFADAW MRQwEgYDVQQDDAtQMlNSb290Q2VydDAeFw0xOTAxMjgyMjExMDJaFw0yMDAxMjgy MjMxMDJaMBYxFDASBgNVBAMMC1AyU1Jvb3RDZXJ0MIIBIjANBgkqhkiG9w0BAQEF AAOCAQ8AMIIBCgKCAQEA2gBlpDrv0idybDhFnbhio8W2f0W7WujouoZA1pmStKeD +A7XoScvAsvqkt9aJenxyfxB3xVtR1Crpt/wZGDQ46MxMlwmHE7wMvhxQxbPXDr8 EM1Iqc7wyK67p6XiAaNXvkR4U2GweZSJKfqIc/CfOTegiql/VFJ9XoXWtckT5iqr o5o9Cye5tr/I5y0BahI0RSbAHd8rDiW49lz2zDXXKbqJ7jgeRlHAfpjqNN8RQDKK xFqNFbvEj0rbotU4gzFQKGNNnHw0WgVzPx3hhOoxojLTqZSXyMna6fH1uZerrRty gxbowtlgdzQejx+5JWiZx32/m0dos515nFiIg02ocQIDAQABozEwLzAOBgNVHQ8B Af8EBAMCAgQwHQYDVR0OBBYEFE5LiseANr15VaeCuF0ZOI46dINwMA0GCSqGSIb3 DQEBCwUAA4IBAQAyZScpvWlZ82UWbPrSCrSmEizAwUoMRUhgbLbli3Z6RL9vwRAk nTc6UZ/gRIrhphPm01j5To8RFWbtl0wAc1wU9iyOD3OZ0vbKmwNJp92U7A45f/1b 24pa4EjU2GZAp0AaOUqtFlKqixNogcKRCx0F2KOeMASzvNPhClSaGglykALKGzt5 8FUmaiKi1RT7IG1fFXd//bDP8fz6Ru3PeN+zB+7X+OkdBQN9c5qJ2Qfzm7m/YSWp zJcI4bg5M/AI1+nmCObJznKLx6wX339GYAf7ZeebGI2ezUp2JkkGnlDm5sxCq89N HC3LebmdQIcApsCNJZ7CF4nZufEwEo/vd0cc"
+                            }
+                        }
+                    ],
+                    "vpnClientRevokedCertificates": [],
+                    "vpnClientIpsecPolicies": []
+                },
+                "bgpSettings": {
+                    "asn": 65515,
+                    "bgpPeeringAddress": "10.0.255.254",
+                    "peerWeight": 0
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_vpn_vgw_ip_name'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), parameters('subnets_GatewaySubnet_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/virtualNetworks/vnet'.",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('virtualNetworks_vnet_name')]",
+            "apiVersion": "2018-10-01",
+            "location": "southcentralus",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "resourceGuid": "3fb7c547-6bf7-4799-81ac-517b17554500",
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "snet-dmz-out",
+                        "etag": "W/\"4bf519a2-75eb-41e4-ad93-151bf775dace\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "addressPrefix": "10.0.0.32/27",
+                            "delegations": []
+                        }
+                    },
+                    {
+                        "name": "snet-mgmt",
+                        "etag": "W/\"4bf519a2-75eb-41e4-ad93-151bf775dace\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "addressPrefix": "10.0.0.128/25",
+                            "delegations": []
+                        }
+                    },
+                    {
+                        "name": "snet-dmz-in",
+                        "etag": "W/\"4bf519a2-75eb-41e4-ad93-151bf775dace\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "addressPrefix": "10.0.0.0/27",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_dmz_in_name'))]"
+                            },
+                            "serviceEndpoints": [],
+                            "delegations": []
+                        }
+                    },
+                    {
+                        "name": "GatewaySubnet",
+                        "etag": "W/\"4bf519a2-75eb-41e4-ad93-151bf775dace\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "addressPrefix": "10.0.255.224/27",
+                            "serviceEndpoints": [],
+                            "delegations": []
+                        }
+                    },
+                    {
+                        "name": "snet-private",
+                        "etag": "W/\"4bf519a2-75eb-41e4-ad93-151bf775dace\"",
+                        "properties": {
+                            "provisioningState": "Succeeded",
+                            "addressPrefix": "10.0.1.0/24",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_private_name'))]"
+                            },
+                            "serviceEndpoints": [],
+                            "delegations": []
+                        }
+                    }
+                ],
+                "virtualNetworkPeerings": [],
+                "enableDdosProtection": false,
+                "enableVmProtection": false
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_dmz_in_name'))]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_private_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/routeTables/rt-gateway/routes/route1'.",
+            "type": "Microsoft.Network/routeTables/routes",
+            "name": "[concat(parameters('routeTables_rt_gateway_name'), '/', parameters('routes_route1_name'))]",
+            "apiVersion": "2018-10-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "10.0.1.0/24",
+                "nextHopType": "VirtualNetworkGateway"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_gateway_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/routeTables/rt-private/routes/Default-NVA'.",
+            "type": "Microsoft.Network/routeTables/routes",
+            "name": "[concat(parameters('routeTables_rt_private_name'), '/', parameters('routes_Default_NVA_name'))]",
+            "apiVersion": "2018-10-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "0.0.0.0/0",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "10.0.0.5"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_private_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/virtualNetworks/vnet/subnets/snet-dmz-out'.",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(parameters('virtualNetworks_vnet_name'), '/', parameters('subnets_snet_dmz_out_name'))]",
+            "apiVersion": "2018-10-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "10.0.0.32/27",
+                "delegations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_vnet_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/virtualNetworks/vnet/subnets/snet-mgmt'.",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(parameters('virtualNetworks_vnet_name'), '/', parameters('subnets_snet_mgmt_name'))]",
+            "apiVersion": "2018-10-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "10.0.0.128/25",
+                "delegations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_vnet_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/virtualNetworks/vnet/subnets/snet-dmz-in'.",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(parameters('virtualNetworks_vnet_name'), '/', parameters('subnets_snet_dmz_in_name'))]",
+            "apiVersion": "2018-10-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "10.0.0.0/27",
+                "routeTable": {
+                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_dmz_in_name'))]"
+                },
+                "serviceEndpoints": [],
+                "delegations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_vnet_name'))]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_dmz_in_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/virtualNetworks/vnet/subnets/GatewaySubnet'.",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(parameters('virtualNetworks_vnet_name'), '/', parameters('subnets_GatewaySubnet_name'))]",
+            "apiVersion": "2018-10-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "10.0.255.224/27",
+                "serviceEndpoints": [],
+                "delegations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_vnet_name'))]"
+            ]
+        },
+        {
+            "comments": "Generalized from resource: '/subscriptions/fff7e585-b3b3-4284-96d7-f102bdd306d4/resourceGroups/vnet-template-test2/providers/Microsoft.Network/virtualNetworks/vnet/subnets/snet-private'.",
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "name": "[concat(parameters('virtualNetworks_vnet_name'), '/', parameters('subnets_snet_private_name'))]",
+            "apiVersion": "2018-10-01",
+            "scale": null,
+            "properties": {
+                "provisioningState": "Succeeded",
+                "addressPrefix": "10.0.1.0/24",
+                "routeTable": {
+                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_private_name'))]"
+                },
+                "serviceEndpoints": [],
+                "delegations": []
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_vnet_name'))]",
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTables_rt_private_name'))]"
+            ]
+        }
+    ]
+}

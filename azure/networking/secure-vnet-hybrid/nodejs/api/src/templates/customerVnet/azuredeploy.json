@@ -1,0 +1,641 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "vnetAddressPrefixSecondOctet": {
+            "type": "int",
+            "minValue": 1,
+            "maxValue": 255
+        },
+        "vnetAddressPrefixThirdOctet": {
+            "type": "int",
+            "minValue": 1,
+            "maxValue": 255
+        },
+        "vnetName": {
+            "defaultValue": "vnet",
+            "type": "string"
+        },
+        "subnetDmzInName": {
+            "defaultValue": "snet-dmz-in",
+            "type": "string"
+        },
+        "subnetDmzOutName": {
+            "defaultValue": "snet-dmz-out",
+            "type": "string"
+        },
+        "subnetMgmtName": {
+            "defaultValue": "snet-mgmt",
+            "type": "string"
+        },
+        "subnetServicesName": {
+            "defaultValue": "snet-services",
+            "type": "string"
+        },
+        "firewallOsDiskType": {
+            "type": "string",
+            "defaultValue": "StandardSSD_LRS"
+        },
+        "firewallVirtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_B1s"
+        },
+        "firewallAdminUsername": {
+            "type": "string"
+        },
+        "firewallAdminPassword": {
+            "type": "securestring"
+        },
+        "vceOsDiskType": {
+            "type": "string",
+            "defaultValue": "StandardSSD_LRS"
+        },
+        "vceVirtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_B1s"
+        },
+        "vceAdminUsername": {
+            "type": "string"
+        },
+        "vceAdminPassword": {
+            "type": "securestring"
+        },
+        "sensorOsDiskType": {
+            "type": "string",
+            "defaultValue": "StandardSSD_LRS"
+        },
+        "sensorVirtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_B1s"
+        },
+        "sensorAdminUsername": {
+            "type": "string"
+        },
+        "sensorAdminPassword": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "vnetAddressPrefix": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.0/24')]",
+        "subnetDmzInAddressPrefix": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.0/27')]",
+        "subnetDmzOutAddressPrefix": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.32/27')]",
+        "subnetMgmtAddressPrefix": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.64/27')]",
+        "subnetGatewayAddressPrefix": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.96/27')]",
+        "subnetServicesAddressPrefix": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.128/25')]",
+        "routeTableDmzInName": "[concat(parameters('vnetName'),'-rt-',parameters('subnetDmzInName'))]",
+        "routeTableDmzOutName": "[concat(parameters('vnetName'),'-rt-',parameters('subnetDmzOutName'))]",
+        "routeTableMgmtName": "[concat(parameters('vnetName'),'-rt-',parameters('subnetMgmtName'))]",
+        "routeTableGatewayName": "[concat(parameters('vnetName'),'-rt-','GatewaySubnet')]",
+        "routeTableServicesName": "[concat(parameters('vnetName'),'-rt-',parameters('subnetServicesName'))]",
+        "firewallName": "[concat(parameters('vnetName'),'-nva-firewall')]",
+        "firewallNicInName": "[concat(variables('firewallName'), '-nic-dmz-in')]",
+        "firewallNicInIpAddress": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.5' )]",
+        "firewallNicOutName": "[concat(variables('firewallName'), '-nic-dmz-out')]",
+        "firewallNicOutIpAddress": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.36' )]",
+        "vceName": "[concat(parameters('vnetName'),'-nva-vce')]",
+        "vceNicMgmtName": "[concat(variables('vceName'), '-nic-mgmt')]",
+        "vceNicMgmtAddress": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.68' )]",
+        "vceNicTrafficName": "[concat(variables('vceName'), '-nic-dmz-in')]",
+        "vceNicTrafficAddress": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.4' )]",
+        "sensorName": "[concat(parameters('vnetName'),'-nva-sensor')]",
+        "sensorNicMgmtName": "[concat(variables('sensorName'), '-nic-mgmt')]",
+        "sensorNicMgmtAddress": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.69' )]",
+        "sensorNicTrafficName": "[concat(variables('sensorName'), '-nic-traffic')]",
+        "sensorNicTrafficAddress": "[concat('10.',parameters('vnetAddressPrefixSecondOctet'),'.',parameters('vnetAddressPrefixThirdOctet'),'.6' )]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('vnetName')]",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('vnetAddressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetGatewayAddressPrefix')]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', variables('routeTableGatewayName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetDmzInName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetDmzInAddressPrefix')]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', variables('routeTableDmzInName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetDmzOutName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetDmzOutAddressPrefix')]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', variables('routeTableDmzOutName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetMgmtName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetMgmtAddressPrefix')]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', variables('routeTableMgmtName'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetServicesName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetServicesAddressPrefix')]",
+                            "routeTable": {
+                                "id": "[resourceId('Microsoft.Network/routeTables', variables('routeTableServicesName'))]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', variables('routeTableDmzInName'))]",
+                "[resourceId('Microsoft.Network/routeTables', variables('routeTableDmzOutName'))]",
+                "[resourceId('Microsoft.Network/routeTables', variables('routeTableGatewayName'))]",
+                "[resourceId('Microsoft.Network/routeTables', variables('routeTableServicesName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "name": "[variables('routeTableDmzInName')]",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "routes": [
+                    {
+                        "name": "[concat('route-',parameters('vnetName'))]",
+                        "properties": {
+                            "addressPrefix": "[variables('vnetAddressPrefix')]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[variables('firewallNicInIpAddress')]"
+                        }
+                    },
+                    {
+                        "name": "route-default",
+                        "properties": {
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[variables('firewallNicInIpAddress')]"
+                        }
+                    },
+                    {
+                        "name": "[concat('route-',parameters('subnetDmzInName'))]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetDmzInAddressPrefix')]",
+                            "nextHopType": "VnetLocal"
+                        }
+                    }
+                ]
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "name": "[variables('routeTableDmzOutName')]",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "routes": [
+                    {
+                        "name": "[concat('route-',parameters('subnetDmzInName'))]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetDmzInAddressPrefix')]",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[variables('firewallNicOutIpAddress')]"
+                        }
+                    }
+                ]
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "name": "[variables('routeTableMgmtName')]",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "routes": []
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "name": "[variables('routeTableGatewayName')]",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "routes": []
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "name": "[variables('routeTableServicesName')]",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "routes": []
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[variables('firewallNicInName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(variables('firewallNicInName'), '-ipconfig')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetDmzInName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('firewallNicInIpAddress')]",
+                            "primary": true
+                        }
+                    }
+                ],
+                "enableIPForwarding": true
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "tags": {}
+        },
+        {
+            "name": "[variables('firewallNicOutName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(variables('firewallNicOutName'), '-ipconfig')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetDmzOutName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('firewallNicOutIpAddress')]",
+                            "primary": true
+                        }
+                    }
+                ],
+                "enableIPForwarding": true
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "tags": {}
+        },
+        {
+            "name": "[variables('firewallName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('firewallNicInName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('firewallNicOutName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('firewallVirtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('firewallOsDiskType')]"
+                        }
+                    },
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04-LTS",
+                        "version": "latest"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('firewallNicOutName'))]",
+                            "properties": {
+                                "primary": true
+                            }
+                        },
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('firewallNicInName'))]",
+                            "properties": {
+                                "primary": false
+                            }
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[variables('firewallName')]",
+                    "adminUsername": "[parameters('firewallAdminUsername')]",
+                    "adminPassword": "[parameters('firewallAdminPassword')]"
+                }
+            },
+            "tags": {},
+            "resources": [
+                {
+                    "name": "[concat('config-',variables('firewallName'))]",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2018-06-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', variables('firewallName'))]"
+                    ],
+                    "tags": {},
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "protectedSettings": {
+                            "script": "IyEvYmluL2Jhc2gKCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIwojIyBFbmFibGUgSVAgRm9yd2FyZGluZwplY2hvIG5ldC5pcHY0LmlwX2ZvcndhcmQgPSAxIHwgc3VkbyB0ZWUgLWEgL2V0Yy9zeXNjdGwuY29uZgpzdWRvIHN5c2N0bCAtcCAvZXRjL3N5c2N0bC5jb25mCgojIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMKIyMgQ29uZmlndXJlIGlwdGFibGVzIChmb3J3YXJkIHRyYWZmaWMgZnJvbSBldGgxIHRvIGV0aDApCmlwdGFibGVzIC0tZmx1c2gKaXB0YWJsZXMgLS10YWJsZSBuYXQgLS1mbHVzaAppcHRhYmxlcyAtLWRlbGV0ZS1jaGFpbgppcHRhYmxlcyAtLXRhYmxlIG5hdCAtLWRlbGV0ZS1jaGFpbgppcHRhYmxlcyAtRgppcHRhYmxlcyAtWAoKIyBmb3J3YXJkIHRyYWZmaWMgZnJvbSBldGgxIHRvIGV0aDAKaXB0YWJsZXMgLXQgbmF0IC1BIFBPU1RST1VUSU5HIC1vIGV0aDAgLWogTUFTUVVFUkFERQppcHRhYmxlcyAtQSBGT1JXQVJEIC1pIGV0aDEgLW8gZXRoMCAtaiBBQ0NFUFQKaXB0YWJsZXMgLUEgRk9SV0FSRCAtaSBldGgwIC1vIGV0aDEgLW0gc3RhdGUgLS1zdGF0ZSBSRUxBVEVELEVTVEFCTElTSEVEIC1qIEFDQ0VQVAoKIyBzYXZlIGlwdGFibGVzIGFjcm9zcyByZWJvb3RzCmlwdGFibGVzLXNhdmUgPiAvZXRjL2lwdGFibGVzLnJ1bGVzCg=="
+                        },
+                        "settings": {}
+                    },
+                    "comments": "Script is base64 version of firewall.init.sh (e.g. cat firewall.init.sh | base64 -w0)"
+                }
+            ]
+        },
+        {
+            "name": "[variables('vceNicMgmtName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(variables('vceNicMgmtName'), '-ipconfig')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetMgmtName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('vceNicMgmtAddress')]",
+                            "primary": true
+                        }
+                    }
+                ],
+                "enableIPForwarding": false
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "tags": {}
+        },
+        {
+            "name": "[variables('vceNicTrafficName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(variables('vceNicTrafficName'), '-ipconfig')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetDmzInName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('vceNicTrafficAddress')]",
+                            "primary": true
+                        }
+                    }
+                ],
+                "enableIPForwarding": false
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "tags": {}
+        },
+        {
+            "name": "[variables('vceName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('vceNicMgmtName'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('vceNicTrafficName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vceVirtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('vceOsDiskType')]"
+                        }
+                    },
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04-LTS",
+                        "version": "latest"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vceNicMgmtName'))]",
+                            "properties": {
+                                "primary": true
+                            }
+                        },
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('vceNicTrafficName'))]",
+                            "properties": {
+                                "primary": false
+                            }
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[variables('vceName')]",
+                    "adminUsername": "[parameters('vceAdminUsername')]",
+                    "adminPassword": "[parameters('vceAdminPassword')]"
+                }
+            },
+            "tags": {},
+            "resources": [
+                {
+                    "name": "[concat('config-',variables('vceName'))]",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2018-06-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', variables('vceName'))]"
+                    ],
+                    "tags": {},
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "protectedSettings": {
+                            "script": "IyEvYmluL2Jhc2gKCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIwojIyBDb25maWd1cmUgaXB0YWJsZXMgKGZvcndhcmQgdHJhZmZpYyBmcm9tIGV0aDEgdG8gZXRoMCkKaXB0YWJsZXMgLS1mbHVzaAppcHRhYmxlcyAtLXRhYmxlIG5hdCAtLWZsdXNoCmlwdGFibGVzIC0tZGVsZXRlLWNoYWluCmlwdGFibGVzIC0tdGFibGUgbmF0IC0tZGVsZXRlLWNoYWluCmlwdGFibGVzIC1GCmlwdGFibGVzIC1YCgojIG1pcm9yIGFsbCB0cmFmZmljIHRvIHNlbnNvcgppcHRhYmxlcyAtdCBtYW5nbGUgLUkgUFJFUk9VVElORyAtaSBldGgxIC1qIFRFRSAtLWdhdGV3YXkgMTAuMS4xLjYKaXB0YWJsZXMgLXQgbWFuZ2xlIC1JIFBSRVJPVVRJTkcgLW8gZXRoMSAtaiBURUUgLS1nYXRld2F5IDEwLjEuMS42CgojIHNhdmUgaXB0YWJsZXMgYWNyb3NzIHJlYm9vdHMKaXB0YWJsZXMtc2F2ZSA+IC9ldGMvaXB0YWJsZXMucnVsZXMK"
+                        },
+                        "settings": {}
+                    },
+                    "comments": "Script is base64 version of vce.init.sh (e.g. cat vce.init.sh | base64 -w0)"
+                }
+            ]
+        },
+        {
+            "name": "[variables('sensorNicMgmtName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(variables('sensorNicMgmtName'), '-ipconfig')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetMgmtName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('sensorNicMgmtAddress')]",
+                            "primary": true
+                        }
+                    }
+                ],
+                "enableIPForwarding": false
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "tags": {}
+        },
+        {
+            "name": "[variables('sensorNicTrafficName')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('location')]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(variables('sensorNicTrafficName'), '-ipconfig')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subnetDmzInName'))]"
+                            },
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[variables('sensorNicTrafficAddress')]",
+                            "primary": true
+                        }
+                    }
+                ],
+                "enableIPForwarding": true
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            ],
+            "tags": {}
+        },
+        {
+            "name": "[variables('sensorName')]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('sensorNicMgmtName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('sensorVirtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('sensorOsDiskType')]"
+                        }
+                    },
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04-LTS",
+                        "version": "latest"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('sensorNicMgmtName'))]",
+                            "properties": {
+                                "primary": true
+                            }
+                        },
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('sensorNicTrafficName'))]",
+                            "properties": {
+                                "primary": false
+                            }
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[variables('sensorName')]",
+                    "adminUsername": "[parameters('sensorAdminUsername')]",
+                    "adminPassword": "[parameters('sensorAdminPassword')]"
+                }
+            },
+            "tags": {},
+            "resources": [
+                {
+                    "name": "[concat('config-',variables('sensorName'))]",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2018-06-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', variables('sensorName'))]"
+                    ],
+                    "tags": {},
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "protectedSettings": {
+                            "script": "IyEvYmluL2Jhc2gKCiMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIwojIyBDb25maWd1cmUgaXB0YWJsZXMgKGZvcndhcmQgdHJhZmZpYyBmcm9tIGV0aDEgdG8gZXRoMCkKaXB0YWJsZXMgLS1mbHVzaAppcHRhYmxlcyAtLXRhYmxlIG5hdCAtLWZsdXNoCmlwdGFibGVzIC0tZGVsZXRlLWNoYWluCmlwdGFibGVzIC0tdGFibGUgbmF0IC0tZGVsZXRlLWNoYWluCmlwdGFibGVzIC1GCmlwdGFibGVzIC1YCgojIGxvZyBhbmQgZHJvcCB0cmFmZmljCmlwdGFibGVzIC1BIElOUFVUIC1pIGV0aDEgLWogTE9HCmlwdGFibGVzIC1BIElOUFVUIC1pIGV0aDEgLWogRFJPUAoKIyBzYXZlIGlwdGFibGVzIGFjcm9zcyByZWJvb3RzCmlwdGFibGVzLXNhdmUgPiAvZXRjL2lwdGFibGVzLnJ1bGVzCg=="
+                        },
+                        "settings": {}
+                    },
+                    "comments": "Script is base64 version of sensor.init.sh (e.g. cat sensor.init.sh | base64 -w0)"
+                }
+            ]
+        }
+    ]
+}

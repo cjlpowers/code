@@ -1,0 +1,22 @@
+{
+  "name": "hybrid-network-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "Chris Powers",
+  "license": "",
+  "dependencies": {
+    "azure": "^2.3.1-preview",
+    "azure-arm-network": "^11.1.0",
+    "ms-rest-azure": "^2.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^3.2.4",
+    "tslint": "^5.12.1"
+  }
+}

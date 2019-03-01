@@ -1,0 +1,18 @@
+{
+  "name": "azure-functions",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "Chris Powers",
+  "license": "ISC",
+  "dependencies": {
+    "hybrid-network-api": "../api"
+  },
+  "devDependencies": {
+    "typescript": "^3.2.4",
+    "tslint": "^5.12.1",
+    "azure-functions-typedefinitions": "^3.0.0"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "hybrid-network-cli",
+  "version": "1.0.0",
+  "description": "The CLI for the hybrid network management",
+  "main": "dist/cli/src/index.js",
+  "types": "dist/cli/src/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "Chris Powers",
+  "license": "",
+  "dependencies": {
+    "yargs": "^12.0.5"
+  },
+  "devDependencies": {
+    "typescript": "^3.2.4",
+    "tslint": "^5.12.1",
+    "@types/yargs": "^12.0.7"
+  }
+}
