@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bamboo-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard-hdd-retain
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: bamboo
+  name: bamboo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: bamboo
+  template:
+    metadata:
+      labels:
+        k8s-app: bamboo
+    spec:
+      securityContext:
+        fsGroup: 1000
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: bamboo-data
+      containers:
+      - name: bamboo
+        image: atlassian/bamboo-server        
+        ports:
+        - containerPort: 8085
+          protocol: TCP
+        - containerPort: 54663
+          protocol: TCP
+        resources:
+          requests:
+            memory: "1Gi"
+          limits:
+            memory: "2Gi"
+        volumeMounts:
+        - mountPath: "/var/atlassian/application-data/bamboo"
+          name: volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bamboo
+spec:
+  selector:
+    k8s-app: bamboo
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8085
+  - name: broker
+    port: 54663
+    targetPort: 54663
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: bamboo
+spec:
+  rules:
+  - host: bamboo.k8s.cpowers.dev
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: bamboo
+          servicePort: http
+  tls:
+   - secretName: tls-k8s-cpowers-dev

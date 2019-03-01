@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitbucket-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: standard-hdd-retain
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: bitbucket
+  name: bitbucket
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: bitbucket
+  template:
+    metadata:
+      labels:
+        k8s-app: bitbucket
+    spec:
+      containers:
+      - name: bitbucket
+        image: atlassian/bitbucket-server        
+        ports:
+        - containerPort: 7990
+          protocol: TCP
+        - containerPort: 7999
+          protocol: TCP
+        resources:
+          requests:
+            memory: "1Gi"
+          limits:
+            memory: "2Gi"
+        volumeMounts:
+        - mountPath: "/var/atlassian/application-data/bitbucket"
+          name: volume
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: bitbucket-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitbucket
+spec:
+  selector:
+    k8s-app: bitbucket
+  ports:
+  - name: http
+    port: 80
+    targetPort: 7990
+  - name: ssh
+    port: 7999
+    targetPort: 7999
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: bitbucket
+spec:
+  rules:
+  - host: bitbucket.k8s.cpowers.dev
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: bitbucket
+          servicePort: http
+  tls:
+   - secretName: tls-k8s-cpowers-dev
