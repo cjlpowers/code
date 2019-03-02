@@ -1,11 +1,11 @@
-// tslint:disable:no-expression-statement
-import test from 'ava';
+import { it } from 'mocha';
+import assert from 'assert';
 import { double, power } from './number';
 
-test('double', t => {
-  t.is(double(2), 4);
+it('double', () => {
+  assert.equal(double(2), 4);
 });
 
-test('power', t => {
-  t.is(power(2, 4), 16);
+it('power', () => {
+  assert.equal(power(2, 4), 16);
 });

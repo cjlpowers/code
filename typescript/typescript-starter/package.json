@@ -5,7 +5,7 @@
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
   "module": "build/module/index.js",
-  "repository": "https://github.com/cjlpowers/typescript-starter",
+  "repository": "https://github.com/cjlpowers/code/tree/typescript-starter/typescript/typescript-starter",
   "license": "MIT",
   "keywords": [],
   "scripts": {
@@ -13,12 +13,13 @@
     "build": "run-s clean && run-p build:*",
     "build:main": "tsc -p tsconfig.json",
     "build:module": "tsc -p tsconfig.module.json",
+    "ci": "run-s test cov:check",
     "fix": "run-s fix:*",
     "fix:prettier": "prettier \"src/**/*.ts\" --write",
     "fix:tslint": "tslint --fix --project .",
     "test": "run-s build test:*",
     "test:lint": "tslint --project . && prettier \"src/**/*.ts\" --list-different",
-    "test:unit": "nyc --silent ava",
+    "test:unit": "nyc --silent mocha",
     "watch": "run-s clean build:main && run-p \"build:main -- -w\" \"test:unit -- --watch\"",
     "cov": "run-s build test:unit cov:html && opn coverage/index.html",
     "cov:html": "nyc report --reporter=html",
@@ -49,14 +50,15 @@
   "engines": {
     "node": ">=8.9"
   },
-  "dependencies": {
-    "sha.js": "^2.4.11"
+  "dependencies": {    
   },
   "devDependencies": {
-    "ava": "1.0.0-beta.7",
+    "@types/mocha": "^5.2.6",
     "codecov": "^3.1.0",
     "cz-conventional-changelog": "^2.1.0",
+    "mocha": "^6.0.2",
     "npm-run-all": "^4.1.5",
+    "npm-scripts-info": "^0.3.9",
     "nyc": "^13.1.0",
     "opn-cli": "^4.0.0",
     "prettier": "^1.15.2",
@@ -68,14 +70,8 @@
     "typedoc": "^0.13.0",
     "typescript": "^3.1.6"
   },
-  "ava": {
-    "failFast": true,
-    "files": [
-      "build/main/**/*.spec.js"
-    ],
-    "sources": [
-      "build/main/**/*.js"
-    ]
+  "mocha": {
+    "spec": "build/main/**/*.spec.js"
   },
   "config": {
     "commitizen": {
