@@ -1,3 +1,33 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bamboo-agent
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: bamboo-agent
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: bamboo-agent
+subjects:
+- kind: ServiceAccount
+  name: bamboo-agent
+  namespace: default
+roleRef:
+  kind: Role
+  name: bamboo-agent
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,6 +44,7 @@ spec:
       labels:
         k8s-app: bamboo-agent
     spec:
+      serviceAccount: bamboo-agent
       volumes:
       - name: docker-sock-volume
         hostPath:
