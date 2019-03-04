@@ -17,9 +17,6 @@ ARG test_layer_label=test
 LABEL layer=${test_layer_label}
 WORKDIR /app
 
-# install TypeScript compiler
-RUN npm set progress=false && npm config set depth 0
-
 # build source
 COPY tsconfig.json ./
 COPY tsconfig.module.json ./

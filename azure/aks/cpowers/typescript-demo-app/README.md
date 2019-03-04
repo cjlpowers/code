@@ -1,3 +1,3 @@
-# demo-project
+# TypeScript demo-app
 
-A demo TypeScript project
+A demo TypeScript app
