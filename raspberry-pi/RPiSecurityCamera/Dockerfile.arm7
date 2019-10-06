@@ -1,0 +1,9 @@
+FROM sgtwilko/rpi-raspbian-opencv:latest
+
+WORKDIR /app
+
+#RUN pip install imutils
+
+COPY . ./
+
+CMD ["python", "app.py"]
